@@ -1,6 +1,7 @@
 ﻿@page "/product/create"
 @page "/product/update/{id:int}"
 @inject IproductRespository _productRespository
+@inject IcategoryRespository _categoryRespository
 @inject NavigationManager _navigationManager
 @inject IJSRuntime _JS
 
@@ -32,6 +33,27 @@ else
                         <label for="Name">Name</label>
                         <ValidationMessage For="@(() => Product.Name)" />
                     </div>
+                    <div class="form-floating py-3 col-12">
+                        <InputText @bind-Value="Product.Description" class="form-control" id="Description" Placeholder="Description" />
+                        <label for="Description">Description</label>
+                        <ValidationMessage For="@(() => Product.Description)" />
+                    </div>
+                    <div class="form-floating py-3 col-12">
+                        <InputNumber @bind-Value="Product.Price" class="form-control" id="Price" Placeholder="Price" />
+                        <label for="Price">Price</label>
+                        <ValidationMessage For="@(() => Product.Price)" />
+                    </div>
+                    <div class="form-floating py-3 col-12">
+                        <InputSelect @bind-Value="Product.CategoryId" class="form-select" id="category">
+                            <option value="0" disabled selected>--Select Category--</option>
+                            @foreach (var category in _categories)
+                            {
+                                <option value="@category.Id">@category.Name</option>
+                            }
+                        </InputSelect>
+                        <label for="Price">Category</label>
+                        <ValidationMessage For="@(() => Product.CategoryId)" />
+                    </div>
                     <div class="row mt-1">
                         <div class="col-3 col-md-3">
                            <button type="submit" class="btn btn-primary form-control" disabled="@IsProcessing">
@@ -59,24 +81,27 @@ else
     [SupplyParameterFromForm]
     private Product Product { get; set; } = new Product();
 
+    private IEnumerable<Category> _categories = new List<Category>();
+
     private bool IsProcessing { get; set; } = true;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await LoadProduct();
+            await LoadProductAndCategoryList();
             IsProcessing = false;
             StateHasChanged();
         }
     }
 
-    private async Task LoadProduct()
+    private async Task LoadProductAndCategoryList()
     {
         if (Id>0)
         {
             Product = await _productRespository.GetAsync(Id);
         }
+        _categories = await _categoryRespository.GetAllAsync();
     }
 
     private async Task UpsertProduct()
